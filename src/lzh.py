@@ -16,7 +16,7 @@ def unlzh(lzh_name):
         lzh_name.parent.mkdir()
 
     # open lzh file and get file names in it.
-    lha = lhafile.Lhafile(lzh_name)
+    lha = lhafile.Lhafile(str(lzh_name))
 
     # extract all files
     for lha_info in lha.infolist():

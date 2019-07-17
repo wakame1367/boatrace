@@ -21,5 +21,6 @@ def unlzh(lzh_name):
     # extract all files
     for lha_info in lha.infolist():
         file_path = lha_info.filename
-        print(file_path)
-        print(type(file_path))
+        print("extract", file_path)
+        with open(lzh_name.parent / file_path, "wb") as f:
+            f.write(lha.read(file_path))

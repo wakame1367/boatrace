@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 from src.lzh import unlzh
 
@@ -12,7 +13,7 @@ def get_arguments():
 
 def main():
     args = get_arguments()
-    unlzh(args.lzh_path)
+    unlzh(Path(args.lzh_path))
 
 
 if __name__ == '__main__':

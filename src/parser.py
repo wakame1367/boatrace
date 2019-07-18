@@ -1,6 +1,3 @@
-import re
-
-
 class Result:
     def __init__(self):
         self.head = ["race_name", "date1", "date2", "place", "round_name",
@@ -24,8 +21,8 @@ class Result:
                 raw_lines.append(line.rstrip())
         txt = []
         for idx in sep_index:
-            txt.append(raw_lines[idx-self.race_info_length])
-            txt += raw_lines[idx+1:idx+self.race_result_length+1]
+            txt.append(raw_lines[idx - self.race_info_length])
+            txt += raw_lines[idx + 1:idx + self.race_result_length + 1]
 
         new_txt = []
         for line in txt:

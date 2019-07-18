@@ -25,4 +25,10 @@ class Result:
         for idx in sep_index:
             txt += raw_lines[idx - self.race_info_length:idx]
             txt += raw_lines[idx + 1:idx + self.race_result_length + 1]
-        return txt
+
+        new_txt = []
+        for line in txt:
+            # 田\u3000中\u3000\u3000\u3000\u3000大 - > 田中大
+            new_txt.append(line.strip().replace("\u3000", "").split())
+        return new_txt
+

@@ -22,6 +22,10 @@ class Result:
                 raw_lines.append(line.rstrip())
         txt = []
         for idx in sep_index:
-            txt += raw_lines[idx-self.race_info_length:idx]
+            txt.append(raw_lines[idx-self.race_info_length])
             txt += raw_lines[idx+1:idx+self.race_result_length+1]
-        return txt
+
+        new_txt = []
+        for line in txt:
+            new_txt.append(line.strip().replace("\u3000", "").split())
+        return new_txt

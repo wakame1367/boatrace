@@ -7,6 +7,8 @@ class Result:
                      "type",
                      "landing_boat", "registration_number", "player_name",
                      "ﾓｰﾀｰ", "ﾎﾞｰﾄ", "展示", "進入", "ｽﾀｰﾄﾀｲﾐﾝｸ", "ﾚｰｽﾀｲﾑ"]
+        self.header = []
+        self.dtypes = [int, int, int, str, int, int, float, int, float, str]
         self.sep_size = 79
         self.separator = "-" * self.sep_size
         self.race_info_length = 2

@@ -28,5 +28,6 @@ class Result:
 
         new_txt = []
         for line in txt:
-            new_txt.append(line.strip().replace("\u3000", "").split())
+            rline = line.strip().replace("\u3000", "").replace(".  .", "-")
+            new_txt.append(rline.split())
         return new_txt

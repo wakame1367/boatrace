@@ -46,6 +46,7 @@ class Result:
 
         start_line = new_txt[0]
         lines = []
+        # add race_info(weather, wind_direction) per column
         for line_no, line in enumerate(new_txt):
             if line_no % (self.race_result_length + 1) == 0:
                 start_line = line

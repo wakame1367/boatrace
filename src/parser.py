@@ -1,3 +1,6 @@
+import re
+
+
 class Result:
     def __init__(self):
         self.head = ["race_name", "date1", "date2", "place", "round_name",
@@ -18,6 +21,9 @@ class Result:
         self.separator = "-" * self.sep_size
         self.race_info_length = 2
         self.race_result_length = 6
+        # Reference
+        # http://boat-advisor.com/soft/manual/data_keyword.htm
+        self.is_landing_boat = re.compile("0[1-6]|S[0-2]|L[0-1]|K[0-1]|F")
 
     def parse(self, path):
         sep_index = []
@@ -39,9 +45,17 @@ class Result:
         for line in txt:
             rline = line.strip().replace("\u3000", "").replace(".  .", "-")
             split_line = rline.split()
-            # race_time is non-records
+            # add race_name to race_info
             if len(split_line) == 9:
                 split_line.insert(self.race_info_length, "-")
+            # is_race_result
+            if self.is_race_result(split_line):
+                # Reference
+                # http://boat-advisor.com/soft/manual/data_keyword.htm
+                # 着順情報が 01 ~ 06 以外の情報が存在する
+                # 観測できたのは K0 : 欠場, 欠場の場合race_time等が歯抜けになる
+                if not re.match("0[1-6]", split_line[0]):
+                    print(split_line)
             new_txt.append(split_line)
 
         start_line = new_txt[0]
@@ -53,3 +67,17 @@ class Result:
             else:
                 lines.append(start_line + line)
         return lines
+
+    def is_race_result(self, line):
+        landing_boat = line[0]
+        if self.is_landing_boat.match(landing_boat):
+            return True
+        else:
+            return False
+
+    def is_race_info(self, line):
+        landing_boat = line[0]
+        if self.is_landing_boat.match(landing_boat):
+            return False
+        else:
+            return True

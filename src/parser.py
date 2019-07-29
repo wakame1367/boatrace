@@ -22,20 +22,24 @@ class Result:
     def parse(self, path):
         sep_index = []
         raw_lines = []
+        # get raw_txt and separator index
         with open(path, "r") as lines:
             for line_no, line in enumerate(lines):
                 if line.rstrip() == self.separator:
                     sep_index.append(line_no)
                 raw_lines.append(line.rstrip())
         txt = []
+        # Retrieve text between delimiters and delimiters
         for idx in sep_index:
             txt.append(raw_lines[idx - self.race_info_length])
             txt += raw_lines[idx + 1:idx + self.race_result_length + 1]
 
         new_txt = []
+        # strip text
         for line in txt:
             rline = line.strip().replace("\u3000", "").replace(".  .", "-")
             split_line = rline.split()
+            # race_time is non-records
             if len(split_line) == 9:
                 split_line.insert(self.race_info_length, "-")
             new_txt.append(split_line)

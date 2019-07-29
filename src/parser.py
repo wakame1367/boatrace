@@ -34,11 +34,11 @@ class Result:
                                                                                 self.delay_pattern,
                                                                                 self.miss_race_pattern]))
 
-    def parse(self, path):
+    def parse(self, path, encoding="cp932"):
         sep_index = []
         raw_lines = []
         # get raw_txt and separator index
-        with open(path, "r") as lines:
+        with open(path, "r", encoding=encoding) as lines:
             for line_no, line in enumerate(lines):
                 if line.rstrip() == self.separator:
                     sep_index.append(line_no)

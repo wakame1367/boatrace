@@ -52,7 +52,8 @@ class Result:
         new_txt = []
         # strip text
         for line in txt:
-            rline = line.strip().replace("\u3000", "").replace(".  .", "-")
+            rline = line.strip().replace("\u3000", "").replace(".  .", "-").replace("L .", "- -")\
+                .replace("K .         K .", "- - -")
             split_line = rline.split()
             # add race_name to race_info
             if len(split_line) == 9:

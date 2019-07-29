@@ -67,6 +67,10 @@ class Result:
                 is_anomaly_landing = False
                 if not re.match("0[1-6]", split_line[0]):
                     is_anomaly_landing = True
+                    # is_false_start
+                    approach_time = split_line[8]
+                    if re.match("F", approach_time):
+                        split_line[8] = approach_time.split("F")[1]
                 split_line.append(is_anomaly_landing)
             new_txt.append(split_line)
 

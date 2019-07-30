@@ -33,6 +33,7 @@ class Result:
                                                                                 self.false_start_pattern,
                                                                                 self.delay_pattern,
                                                                                 self.miss_race_pattern]))
+        self.course_length_pattern = re.compile(r"H(\d+)m")
 
     def parse(self, path, encoding="cp932"):
         """
@@ -48,7 +49,8 @@ class Result:
         """
         sep_index = []
         raw_lines = []
-        date = path.stem
+        # K190701.TXT
+        date = path.stem[1:]
         # get raw_txt and separator index
         with path.open("r", encoding=encoding) as lines:
             for line_no, line in enumerate(lines):
@@ -70,6 +72,7 @@ class Result:
             # add race_name to race_info
             if len(split_line) == 9:
                 split_line.insert(self.race_info_length, "-")
+            split_line = [date] + split_line
             # is_race_result
             if self.is_race_result(split_line):
                 # Reference

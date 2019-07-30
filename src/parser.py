@@ -50,7 +50,7 @@ class Result:
         raw_lines = []
         date = path.stem
         # get raw_txt and separator index
-        with open(path, "r", encoding=encoding) as lines:
+        with path.open("r", encoding=encoding) as lines:
             for line_no, line in enumerate(lines):
                 if line.rstrip() == self.separator:
                     sep_index.append(line_no)

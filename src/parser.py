@@ -35,6 +35,17 @@ class Result:
                                                                                 self.miss_race_pattern]))
 
     def parse(self, path, encoding="cp932"):
+        """
+
+        Parameters
+        ----------
+        path (pathlib.Path or str):
+        encoding (str):
+
+        Returns
+        -------
+            list:
+        """
         sep_index = []
         raw_lines = []
         # get raw_txt and separator index

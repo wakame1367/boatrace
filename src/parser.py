@@ -39,15 +39,16 @@ class Result:
 
         Parameters
         ----------
-        path (pathlib.Path or str):
-        encoding (str):
+        path : pathlib.Path
+        encoding : str
 
         Returns
         -------
-            list:
+            list
         """
         sep_index = []
         raw_lines = []
+        date = path.stem
         # get raw_txt and separator index
         with open(path, "r", encoding=encoding) as lines:
             for line_no, line in enumerate(lines):

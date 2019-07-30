@@ -71,6 +71,8 @@ class Result:
                     approach_time = split_line[8]
                     if re.match("F", approach_time):
                         split_line[8] = approach_time.split("F")[1]
+                    elif re.match("L", approach_time):
+                        split_line[8] = approach_time.split("L")[1]
                 split_line.append(is_anomaly_landing)
             new_txt.append(split_line)
 

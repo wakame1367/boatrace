@@ -66,7 +66,7 @@ class Result:
         new_txt = []
         # strip text
         for line in txt:
-            rline = line.strip().replace("\u3000", "").replace(".  .", "-").replace("L .", "- -")\
+            rline = line.strip().replace("\u3000", "").replace(".  .", "-").replace("L .", "- -") \
                 .replace("K .         K .", "- - -")
             split_line = rline.split()
             # add race_name to race_info
@@ -107,10 +107,3 @@ class Result:
             return True
         else:
             return False
-
-    def is_race_info(self, line):
-        landing_boat = line[0]
-        if self.landing_boat_pattern.match(landing_boat):
-            return False
-        else:
-            return True

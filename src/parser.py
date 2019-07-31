@@ -72,7 +72,7 @@ class Result:
             # add race_name to race_info
             if len(split_line) == 9:
                 split_line.insert(self.race_info_length, "-")
-            split_line = [date] + split_line
+            split_line = split_line
             # is_race_result
             if self.is_race_result(split_line):
                 # Reference
@@ -96,7 +96,7 @@ class Result:
         # add race_info(weather, wind_direction) per column
         for line_no, line in enumerate(new_txt):
             if line_no % (self.race_result_length + 1) == 0:
-                start_line = line
+                start_line = [date] + line
             else:
                 lines.append(start_line + line)
         return lines

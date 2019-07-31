@@ -3,19 +3,14 @@ import re
 
 class Result:
     def __init__(self):
-        self.head = ["race_name", "date1", "date2", "place", "round_name",
-                     "type",
-                     "landing_boat", "registration_number", "player_name",
-                     "ﾓｰﾀｰ", "ﾎﾞｰﾄ", "展示", "進入", "ｽﾀｰﾄﾀｲﾐﾝｸ", "ﾚｰｽﾀｲﾑ"]
-        self.race_info_header = ["round", "race_name", "rave_type",
-                                 "course_length", "weather", "wind",
-                                 "wind_direction", "wind_speed", "wave",
-                                 "wave_height"]
+        self.race_info_header = ["course_length", "weather",
+                                 "wind_direction", "wind_speed", "wave_height"]
         self.race_result_header = ["idx", "landing_boat",
                                    "registration_number",
                                    "player_name", "mortar", "board",
                                    "exhibition",
-                                   "approach", "race_time"]
+                                   "approach", "start_timing", "race_time", "is_anomaly_landing"]
+        self.header = self.race_info_header + self.race_result_header
         self.dtypes = [int, int, int, str, int, int, float, int, float, str]
         self.sep_size = 79
         self.separator = "-" * self.sep_size
@@ -34,6 +29,8 @@ class Result:
                                                                                 self.delay_pattern,
                                                                                 self.miss_race_pattern]))
         self.course_length_pattern = re.compile(r"H(\d+)m")
+        self.wave_pattern = re.compile(r"波.*(\d+cm)")
+        self.wind_pattern = re.compile(r"風(.*)(\d+m)")
 
     def parse(self, path, encoding="cp932"):
         """
@@ -72,7 +69,12 @@ class Result:
             if is_race_info:
                 # cut out after course_length
                 rline = rline[is_race_info.span()[0]:]
-            split_line = rline.split()
+                wave_info = [w.strip() for w in self.wave_pattern.search(rline).groups()]
+                wind_info = [w.strip() for w in self.wind_pattern.search(rline).groups()]
+                # get course_length and wether
+                split_line = rline.split()[:2] + wind_info + wave_info
+            else:
+                split_line = rline.split()
             # add race_name to race_info
             if len(split_line) == 9:
                 split_line.insert(self.race_info_length, "-")

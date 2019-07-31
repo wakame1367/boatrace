@@ -68,6 +68,10 @@ class Result:
         for line in txt:
             rline = line.strip().replace("\u3000", "").replace(".  .", "-").replace("L .", "- -") \
                 .replace("K .         K .", "- - -")
+            is_race_info = self.course_length_pattern.search(rline)
+            if is_race_info:
+                # cut out after course_length
+                rline = rline[is_race_info.span()[0]:]
             split_line = rline.split()
             # add race_name to race_info
             if len(split_line) == 9:

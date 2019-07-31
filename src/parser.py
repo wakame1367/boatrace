@@ -30,7 +30,7 @@ class Result:
                                                                                 self.miss_race_pattern]))
         self.course_length_pattern = re.compile(r"H(\d+)m")
         self.wave_pattern = re.compile(r"波.*(\d+cm)")
-        self.wind_pattern = re.compile(r"風(.*)(\d+m)")
+        self.wind_pattern = re.compile(r"風(.*?)(\d+m)")
 
     def parse(self, path, encoding="cp932"):
         """

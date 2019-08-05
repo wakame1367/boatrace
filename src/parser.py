@@ -146,4 +146,18 @@ class Player:
         # get raw_txt and separator index
         with path.open("r", encoding=encoding) as lines:
             for line_no, line in enumerate(lines):
-                pass
+                # skip blank line
+                if line.strip():
+                    # to byte
+                    byte_line = line.encode(encoding)
+                    start = 0
+                    new_lines = []
+                    for split_byte in self.split_bytes:
+                        end = start + split_byte
+                        # to str
+                        str_line = byte_line[start:end].decode(encoding)
+                        # to raw text
+                        new_lines.append(str_line.replace("\u3000", "").strip())
+                        start = end
+                    raw_lines.append(new_lines)
+        return raw_lines

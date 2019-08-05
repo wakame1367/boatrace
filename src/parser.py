@@ -113,3 +113,37 @@ class Result:
             return True
         else:
             return False
+
+
+class Player:
+    def __init__(self):
+        # TODO
+        # https://www.boatrace.jp/owpc/pc/extra/data/layout.html
+        # url scraping
+        self.split_bytes = [4, 16, 15, 4, 2, 1, 6, 1, 2, 3, 2, 2]
+
+    # reference
+    # https://www.saintsouth.net/blog/truncate-strings-by-specified-bytes-in-python3/
+    @staticmethod
+    def truncate(strings, num_bytes, encoding='utf-8'):
+        while len(strings.encode(encoding)) > num_bytes:
+            strings = strings[:-1]
+        return strings
+
+    def parse(self, path, encoding="cp932"):
+        """
+
+        Parameters
+        ----------
+        path : pathlib.Path
+        encoding : str
+
+        Returns
+        -------
+            list
+        """
+        raw_lines = []
+        # get raw_txt and separator index
+        with path.open("r", encoding=encoding) as lines:
+            for line_no, line in enumerate(lines):
+                pass

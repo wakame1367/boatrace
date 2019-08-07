@@ -131,10 +131,17 @@ class Result:
 
 class Player:
     def __init__(self):
-        # TODO
         # https://www.boatrace.jp/owpc/pc/extra/data/layout.html
-        # url scraping
-        self.split_bytes = [4, 16, 15, 4, 2, 1, 6, 1, 2, 3, 2, 2]
+        self.split_bytes = [4, 16, 15, 4, 2, 1, 6, 1, 2, 3, 2, 2, 4, 4, 3, 3, 3, 2, 2, 3,
+                            3, 4, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3,
+                            2, 2, 2, 4, 4, 4, 1, 8, 8, 3,
+                            3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2,
+                            3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2,
+                            3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2,
+                            3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2,
+                            3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2,
+                            3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2,
+                            2, 2, 2, 2, 6]
 
     # reference
     # https://www.saintsouth.net/blog/truncate-strings-by-specified-bytes-in-python3/

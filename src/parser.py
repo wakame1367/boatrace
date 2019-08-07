@@ -3,7 +3,7 @@ import re
 
 class Result:
     def __init__(self):
-        self.race_info_header = ["course_length", "weather",
+        self.race_info_header = ["date", "boat_race_track", "course_length", "weather",
                                  "wind_direction", "wind_speed", "wave_height"]
         self.race_result_header = ["idx", "landing_boat",
                                    "registration_number",

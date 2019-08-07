@@ -32,7 +32,7 @@ class Result:
         self.course_length_pattern = re.compile(r"H(\d+)m")
         self.wave_pattern = re.compile(r"波.*(\d+cm)")
         self.wind_pattern = re.compile(r"風(.*?)(\d+m)")
-        self.boat_race_track_pattern = re.compile(r"ボートレース.*")
+        self.boat_race_track_pattern = re.compile(r"ボートレース.{2,3}\n")
 
     def parse(self, path, encoding="cp932"):
         """
@@ -55,7 +55,7 @@ class Result:
         with path.open("r", encoding=encoding) as lines:
             for line_no, line in enumerate(lines):
                 raw_line = line.rstrip()
-                boat_race_track = self.boat_race_track_pattern.search(raw_line)
+                boat_race_track = self.boat_race_track_pattern.search(line)
                 if raw_line == self.separator:
                     sep_index.append(line_no)
                 elif boat_race_track:

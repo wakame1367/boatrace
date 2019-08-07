@@ -16,6 +16,7 @@ class Result:
         self.separator = "-" * self.sep_size
         self.race_info_length = 2
         self.race_result_length = 6
+        self.race_round = 12
         # Reference
         # http://boat-advisor.com/soft/manual/data_keyword.htm
         self.landing_boat_pattern = re.compile(r"0[1-6]")
@@ -31,6 +32,7 @@ class Result:
         self.course_length_pattern = re.compile(r"H(\d+)m")
         self.wave_pattern = re.compile(r"波.*(\d+cm)")
         self.wind_pattern = re.compile(r"風(.*?)(\d+m)")
+        self.boat_race_track_pattern = re.compile(r"ボートレース.*")
 
     def parse(self, path, encoding="cp932"):
         """
@@ -44,6 +46,7 @@ class Result:
         -------
             list
         """
+        boat_race_tracks = []
         sep_index = []
         raw_lines = []
         # K190701.TXT
@@ -51,9 +54,13 @@ class Result:
         # get raw_txt and separator index
         with path.open("r", encoding=encoding) as lines:
             for line_no, line in enumerate(lines):
-                if line.rstrip() == self.separator:
+                raw_line = line.rstrip()
+                boat_race_track = self.boat_race_track_pattern.search(raw_line)
+                if raw_line == self.separator:
                     sep_index.append(line_no)
-                raw_lines.append(line.rstrip())
+                elif boat_race_track:
+                    boat_race_tracks.append(boat_race_track.group().replace("\u3000", "").strip())
+                raw_lines.append(raw_line)
         txt = []
         # Retrieve text between delimiters and delimiters
         for idx in sep_index:
@@ -105,6 +112,13 @@ class Result:
                 start_line = [date] + line
             else:
                 lines.append(start_line + line)
+
+        begin_idx = 0
+        for boat_race_idx, boat_race_track in enumerate(boat_race_tracks, 1):
+            end_idx = boat_race_idx * self.race_result_length * self.race_round
+            for line in lines[begin_idx:end_idx]:
+                line.insert(1, boat_race_track)
+            begin_idx = end_idx
         return lines
 
     def is_race_result(self, line):

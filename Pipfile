@@ -8,6 +8,8 @@ lhafile = "*"
 pandas = "*"
 pytest = "*"
 scikit-learn = "*"
+"beautifulsoup4" = "*"
+lxml = "*"
 
 [dev-packages]
 

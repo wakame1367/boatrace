@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from src.lzh import unlzh
+from boatrace.lzh import unlzh
 
 
 def get_arguments():

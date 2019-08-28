@@ -7,8 +7,7 @@ import requests
 
 class StartTable:
     def __init__(self, url):
-        url_query = urlparse(url).query
-        query = parse_qs(url_query)
+        self.parse_url = urlparse(url)
         request = requests.get(url)
         root = lxml.html.fromstring(request.text)
         self.start_table = self.scrape(root)
@@ -21,12 +20,29 @@ class StartTable:
             player_elem_1 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[1]/".format(idx)
             player_elem_2 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[2]/".format(idx)
             player_elem_3 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[3]/".format(idx)
+            race_results = []
+            for td_idx in range(4, 8):
+                race_results.append(xpath_prefix + "tbody[{}]/tr[1]/td[{}]/text()".format(idx, td_idx))
             reg_number_xpath = player_elem_1 + "text()"
             class_xpath = player_elem_1 + "span/text()"
             profile_url_xpath = player_elem_2 + "a/@href"
             player_info_xpath = player_elem_3 + "text()"
             elements = []
-            for xpath in [reg_number_xpath, class_xpath, profile_url_xpath, player_info_xpath]:
+            for elem in root.xpath(reg_number_xpath):
+                match = re.search(r"\d+", elem.strip())
+                if match:
+                    elements.append(match.group())
+            for elem in root.xpath(class_xpath):
+                elements.append(elem.strip())
+            for elem in root.xpath(profile_url_xpath):
+                parse_profile_url = urlparse(elem.strip())
+                profile_url = self.parse_url._replace(path=parse_profile_url.path)
+                profile_url = profile_url._replace(query=parse_profile_url.query)
+                elements.append(profile_url.geturl())
+            for elem in root.xpath(player_info_xpath):
+                for e in elem.strip().split("/"):
+                    elements.append(e.strip())
+            for xpath in race_results:
                 for elem in root.xpath(xpath):
                     elements.append(elem.strip())
             start_table.append(elements)

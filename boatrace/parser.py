@@ -1,13 +1,58 @@
 import re
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 
 import lxml.html
 import requests
 
 
+class AdvanceInfo:
+    def __init__(self, url):
+        self.parse_url = urlparse(url)
+        self.url_pat = "beforeinfo"
+        if self.url_pat not in self.parse_url.path:
+            raise ValueError("url not matched {}".format(self.url_pat))
+        request = requests.get(url)
+        root = lxml.html.fromstring(request.text)
+        self.table = self.scrape(root)
+
+    def scrape(self, root):
+        players = 6
+        table = []
+        enf_info = []
+        xpath_race_prefix = "/html/body/main/div/div/div/div[2]/div[4]/div[1]/div[1]/table/"
+        xpath_weather_prefix = "/html/body/main/div/div/div/div[2]/div[4]/div[2]/div[2]/div[1]/"
+
+        temp_xpath = xpath_weather_prefix + "div[1]/div/span[2]/text()"
+        weather_xpath = xpath_weather_prefix + "div[2]/div/span/text()"
+        wind_speed_xpath = xpath_weather_prefix + "div[3]/div/span[2]/text()"
+        water_temp_xpath = xpath_weather_prefix + "div[5]/div/span[2]/text()"
+        wave_height_xpath = xpath_weather_prefix + "div[6]/div/span[2]/text()"
+        for xpath in [temp_xpath, weather_xpath, wind_speed_xpath, water_temp_xpath, wave_height_xpath]:
+            for elem in root.xpath(xpath):
+                enf_info.append(elem.strip())
+        for idx in range(1, players + 1):
+            elements = []
+            player_elem = xpath_race_prefix + "tbody[{}]/".format(idx)
+            weight_xpath = player_elem + "tr[1]/td[4]/text()"
+            exhibition_xpath = player_elem + "tr[1]/td[5]/text()"
+            tilt_xpath = player_elem + "tr[1]/td[6]/text()"
+            assigned_weight_xpath = player_elem + "tr[3]/td[1]/text()"
+            for xpath in [weight_xpath, exhibition_xpath, tilt_xpath, assigned_weight_xpath]:
+                for elem in root.xpath(xpath):
+                    elements.append(elem.strip())
+            table.append(enf_info + elements)
+        return table
+
+    def preprocess(self):
+        pass
+
+
 class StartTable:
     def __init__(self, url):
         self.parse_url = urlparse(url)
+        self.url_pat = "racelist"
+        if self.url_pat not in self.parse_url.path:
+            raise ValueError("url not matched {}".format(self.url_pat))
         request = requests.get(url)
         root = lxml.html.fromstring(request.text)
         self.start_table = self.scrape(root)

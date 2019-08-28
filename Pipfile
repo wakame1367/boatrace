@@ -10,6 +10,7 @@ pytest = "*"
 scikit-learn = "*"
 "beautifulsoup4" = "*"
 lxml = "*"
+requests = "*"
 
 [dev-packages]
 

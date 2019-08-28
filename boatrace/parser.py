@@ -1,4 +1,16 @@
+import requests
 import re
+import lxml.html
+from urllib.parse import urlparse, parse_qs
+
+
+class StartTable:
+    def __init__(self, url=None):
+        if url:
+            url_query = urlparse(url).query
+            query = parse_qs(url_query)
+            request = requests.get(url)
+            root = lxml.html.fromstring(request.text)
 
 
 class Result:

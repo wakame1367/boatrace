@@ -1,16 +1,39 @@
-import requests
 import re
-import lxml.html
 from urllib.parse import urlparse, parse_qs
+
+import lxml.html
+import requests
 
 
 class StartTable:
-    def __init__(self, url=None):
-        if url:
-            url_query = urlparse(url).query
-            query = parse_qs(url_query)
-            request = requests.get(url)
-            root = lxml.html.fromstring(request.text)
+    def __init__(self, url):
+        url_query = urlparse(url).query
+        query = parse_qs(url_query)
+        request = requests.get(url)
+        root = lxml.html.fromstring(request.text)
+        self.start_table = self.scrape(root)
+
+    def scrape(self, root):
+        players = 6
+        start_table = []
+        xpath_prefix = "/html/body/main/div/div/div/div[2]/div[4]/table/"
+        for idx in range(1, players + 1):
+            player_elem_1 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[1]/".format(idx)
+            player_elem_2 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[2]/".format(idx)
+            player_elem_3 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[3]/".format(idx)
+            reg_number_xpath = player_elem_1 + "text()"
+            class_xpath = player_elem_1 + "span/text()"
+            profile_url_xpath = player_elem_2 + "a/@href"
+            player_info_xpath = player_elem_3 + "text()"
+            elements = []
+            for xpath in [reg_number_xpath, class_xpath, profile_url_xpath, player_info_xpath]:
+                for elem in root.xpath(xpath):
+                    elements.append(elem.strip())
+            start_table.append(elements)
+        return start_table
+
+    def preprocess(self):
+        pass
 
 
 class Result:

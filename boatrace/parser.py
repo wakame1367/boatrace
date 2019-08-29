@@ -48,14 +48,15 @@ class AdvanceInfo:
 
 
 class StartTable:
-    def __init__(self, url):
-        self.parse_url = urlparse(url)
-        self.url_pat = "racelist"
-        if self.url_pat not in self.parse_url.path:
-            raise ValueError("url not matched {}".format(self.url_pat))
-        request = requests.get(url)
-        root = lxml.html.fromstring(request.text)
-        self.start_table = self.scrape(root)
+    def __init__(self, url=None):
+        if url:
+            self.parse_url = urlparse(url)
+            self.url_pat = "racelist"
+            if self.url_pat not in self.parse_url.path:
+                raise ValueError("url not matched {}".format(self.url_pat))
+            request = requests.get(url)
+            root = lxml.html.fromstring(request.text)
+            self.start_table = self.scrape(root)
 
     def parse(self, path, encoding="cp932"):
         date = path.stem[1:]
@@ -80,14 +81,19 @@ class StartTable:
             # skip headers
             race_info = raw_lines[b_idx+1].strip()
             one_day_lines = raw_lines[b_idx+race_header_length:e_idx]
+            end_race_idx = 0
             for race_idx in range(interval_per_day_length):
                 if race_idx == 0:
                     begin_race_idx = race_idx * players + result_header_length
                 else:
-                    begin_race_idx = race_idx * players + result_header_length + interval_per_race_length
+                    begin_race_idx = end_race_idx + result_header_length + interval_per_race_length
                 end_race_idx = begin_race_idx + players
-                tables += one_day_lines[begin_race_idx:end_race_idx]
+                for line in one_day_lines[begin_race_idx:end_race_idx]:
+                    tables.append(self.preprocess_line(line))
         return tables
+
+    def preprocess_line(self, line):
+        return line.strip().split()
 
     def scrape(self, root):
         players = 6

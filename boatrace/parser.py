@@ -49,6 +49,11 @@ class AdvanceInfo:
 
 class StartTable:
     def __init__(self, url=None):
+        self.header = ["idx", "registration_number",
+                       "player_name", "age", "weight", "class",
+                       "global_win_perc", "global_win_in_second",
+                       "local_win_perc", "local_win_in_second",
+                       "mortar", "mortar_win_in_second", "board", "board_win_in_second"]
         if url:
             self.parse_url = urlparse(url)
             self.url_pat = "racelist"

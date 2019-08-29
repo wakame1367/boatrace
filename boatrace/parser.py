@@ -1,4 +1,5 @@
 import re
+import pandas as pd
 from urllib.parse import urlparse
 
 import lxml.html
@@ -48,20 +49,29 @@ class AdvanceInfo:
 
 
 class StartTable:
-    def __init__(self, url=None):
+    def __init__(self, url=None, path=None):
         self.header = ["idx", "registration_number", "age", "weight", "class",
                        "global_win_perc", "global_win_in_second",
                        "local_win_perc", "local_win_in_second",
                        "mortar", "mortar_win_in_second", "board", "board_win_in_second"]
         self.race_class = {"A1": 3, "A2": 2, "B1": 1, "B2": 0}
-        if url:
-            self.parse_url = urlparse(url)
-            self.url_pat = "racelist"
-            if self.url_pat not in self.parse_url.path:
-                raise ValueError("url not matched {}".format(self.url_pat))
-            request = requests.get(url)
-            root = lxml.html.fromstring(request.text)
-            self.start_table = self.scrape(root)
+        self.is_scrape = False
+        if url or path:
+            if url:
+                self.parse_url = urlparse(url)
+                self.url_pat = "racelist"
+                if self.url_pat not in self.parse_url.path:
+                    raise ValueError("url not matched {}".format(self.url_pat))
+                request = requests.get(url)
+                root = lxml.html.fromstring(request.text)
+                self.start_table = self.scrape(root)
+                self.is_scrape = True
+            elif path:
+                if not path.exists():
+                    raise FileExistsError("{} is not exist".format(path))
+                self.parse(path)
+        else:
+            raise ValueError("set url or path")
 
     def parse(self, path, encoding="cp932"):
         date = path.stem[1:]
@@ -95,7 +105,7 @@ class StartTable:
                 end_race_idx = begin_race_idx + players
                 for line in one_day_lines[begin_race_idx:end_race_idx]:
                     tables.append(self.__preprocess_line(line))
-        return tables
+        self.start_table = tables
 
     def __preprocess_line(self, line):
         split_line = line.strip().replace("\u3000", "").split()
@@ -155,7 +165,10 @@ class StartTable:
         return start_table
 
     def preprocess(self):
-        pass
+        if self.is_scrape:
+            pass
+        else:
+            return pd.DataFrame(self.start_table, columns=self.header)
 
 
 class Result:

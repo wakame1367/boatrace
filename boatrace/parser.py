@@ -169,7 +169,9 @@ class StartTable:
             pass
         else:
             # drop idx
-            return pd.DataFrame(self.start_table[1:], columns=self.header)
+            df = pd.DataFrame(self.start_table).drop(columns=[0])
+            df.columns = self.header
+            return df
 
 
 class Result:

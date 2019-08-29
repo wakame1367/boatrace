@@ -53,6 +53,7 @@ class StartTable:
                        "global_win_perc", "global_win_in_second",
                        "local_win_perc", "local_win_in_second",
                        "mortar", "mortar_win_in_second", "board", "board_win_in_second"]
+        self.race_class = {"A1": 3, "A2": 2, "B1": 1, "B2": 0}
         if url:
             self.parse_url = urlparse(url)
             self.url_pat = "racelist"
@@ -96,11 +97,25 @@ class StartTable:
                     tables.append(self.__preprocess_line(line))
         return tables
 
-    @staticmethod
-    def __preprocess_line(line):
+    def __preprocess_line(self, line):
         split_line = line.strip().replace("\u3000", "").split()
         # drop after index 10 to same length
         split_line = split_line[:10]
+        target = split_line[1]
+        reg_number = re.match(r"\d+", target).group()
+        target = target.replace(reg_number, "")
+        age = re.search(r"\d+", target).group()
+        target = target.replace(age, "")
+        weight = re.search(r"\d+", target).group()
+        c = None
+        for c in self.race_class.keys():
+            if c in target:
+                break
+        del split_line[1]
+        split_line.insert(1, reg_number)
+        split_line.insert(2, age)
+        split_line.insert(3, weight)
+        split_line.insert(4, c)
         return split_line
 
     def scrape(self, root):

@@ -69,11 +69,11 @@ class StartTable:
             elif path:
                 if not path.exists():
                     raise FileExistsError("{} is not exist".format(path))
-                self.parse(path)
+                self.__parse(path)
         else:
             raise ValueError("set url or path")
 
-    def parse(self, path, encoding="cp932"):
+    def __parse(self, path, encoding="cp932"):
         date = path.stem[1:]
         tables = []
         raw_lines = []

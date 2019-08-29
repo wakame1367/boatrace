@@ -137,7 +137,7 @@ class StartTable:
             player_elem_2 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[2]/".format(idx)
             player_elem_3 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[3]/".format(idx)
             race_results = []
-            for td_idx in range(4, 8):
+            for td_idx in range(4, 9):
                 race_results.append(xpath_prefix + "tbody[{}]/tr[1]/td[{}]/text()".format(idx, td_idx))
             reg_number_xpath = player_elem_1 + "text()"
             class_xpath = player_elem_1 + "span/text()"

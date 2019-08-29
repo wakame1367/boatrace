@@ -171,7 +171,10 @@ class StartTable:
                       "mortar_win_in_second", "board_win_in_second"]
         cat_cols = ["registration_number", "mortar", "board"]
         if self.is_scrape:
-            pass
+            df = pd.DataFrame(self.start_table).drop(columns=[2, 3, 4, 7, 8, 9,
+                                                              12, 15, 18, 21])
+            df.columns = self.header
+            return df
         else:
             # drop idx
             df = pd.DataFrame(self.start_table).drop(columns=[0])

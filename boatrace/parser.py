@@ -57,6 +57,38 @@ class StartTable:
         root = lxml.html.fromstring(request.text)
         self.start_table = self.scrape(root)
 
+    def parse(self, path, encoding="cp932"):
+        date = path.stem[1:]
+        tables = []
+        raw_lines = []
+        begin_idx = []
+        end_idx = []
+        race_header_length = 12
+        result_header_length = 5
+        interval_per_race_length = 1
+        interval_per_day_length = 12
+        players = 6
+        with path.open("r", encoding=encoding) as lines:
+            for line_no, line in enumerate(lines):
+                raw_line = line.strip()
+                raw_lines.append(raw_line)
+                if "BBGN" in raw_line:
+                    begin_idx.append(line_no)
+                if "BEND" in raw_line:
+                    end_idx.append(line_no)
+        for b_idx, e_idx in zip(begin_idx, end_idx):
+            # skip headers
+            race_info = raw_lines[b_idx+1].strip()
+            one_day_lines = raw_lines[b_idx+race_header_length:e_idx]
+            for race_idx in range(interval_per_day_length):
+                if race_idx == 0:
+                    begin_race_idx = race_idx * players + result_header_length
+                else:
+                    begin_race_idx = race_idx * players + result_header_length + interval_per_race_length
+                end_race_idx = begin_race_idx + players
+                tables += one_day_lines[begin_race_idx:end_race_idx]
+        return tables
+
     def scrape(self, root):
         players = 6
         start_table = []

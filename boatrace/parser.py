@@ -94,11 +94,11 @@ class StartTable:
                     begin_race_idx = end_race_idx + result_header_length + interval_per_race_length
                 end_race_idx = begin_race_idx + players
                 for line in one_day_lines[begin_race_idx:end_race_idx]:
-                    tables.append(self.preprocess_line(line))
+                    tables.append(self.__preprocess_line(line))
         return tables
 
     @staticmethod
-    def preprocess_line(line):
+    def __preprocess_line(line):
         split_line = line.strip().replace("\u3000", "").split()
         # drop after index 10 to same length
         split_line = split_line[:10]

@@ -79,8 +79,8 @@ class StartTable:
                     end_idx.append(line_no)
         for b_idx, e_idx in zip(begin_idx, end_idx):
             # skip headers
-            race_info = raw_lines[b_idx+1].strip()
-            one_day_lines = raw_lines[b_idx+race_header_length:e_idx]
+            race_info = raw_lines[b_idx + 1].strip()
+            one_day_lines = raw_lines[b_idx + race_header_length:e_idx]
             end_race_idx = 0
             for race_idx in range(interval_per_day_length):
                 if race_idx == 0:
@@ -92,8 +92,12 @@ class StartTable:
                     tables.append(self.preprocess_line(line))
         return tables
 
-    def preprocess_line(self, line):
-        return line.strip().split()
+    @staticmethod
+    def preprocess_line(line):
+        split_line = line.strip().replace("\u3000", "").split()
+        # drop after index 10 to same length
+        split_line = split_line[:10]
+        return split_line
 
     def scrape(self, root):
         players = 6

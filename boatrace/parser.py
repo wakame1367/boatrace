@@ -165,12 +165,25 @@ class StartTable:
         return start_table
 
     def preprocess(self):
+        int_cols = ["age", "weight"]
+        float_cols = ["global_win_perc", "global_win_in_second",
+                      "local_win_perc", "local_win_in_second",
+                      "mortar_win_in_second", "board_win_in_second"]
+        cat_cols = ["registration_number", "mortar", "board"]
         if self.is_scrape:
             pass
         else:
             # drop idx
             df = pd.DataFrame(self.start_table).drop(columns=[0])
             df.columns = self.header
+            df["class"] = df["class"].map(self.race_class)
+
+            for col in int_cols:
+                df[col] = df[col].astype(int)
+            for col in float_cols:
+                df[col] = df[col].astype(float)
+            for col in cat_cols:
+                df[col] = df[col].astype("category")
             return df
 
 

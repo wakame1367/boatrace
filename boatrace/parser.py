@@ -4,6 +4,12 @@ from urllib.parse import urlparse, parse_qsl
 import lxml.html
 import pandas as pd
 import requests
+from pathlib import Path
+from boatrace.util import Config
+
+config = Config(path=Path(__file__).parent / "params.yaml")
+racer_class = config.get_racer_class()
+field_name2code = config.get_field_code()
 
 
 class AdvanceInfo:
@@ -58,7 +64,8 @@ class StartTable:
                        "local_win_perc", "local_win_in_second",
                        "mortar", "mortar_win_in_second", "board",
                        "board_win_in_second"]
-        self.racer_class = {"A1": 3, "A2": 2, "B1": 1, "B2": 0}
+        self.racer_class = racer_class
+        self.field_name2code = field_name2code
         self.is_scrape = False
         if url or path:
             if url:
@@ -205,6 +212,8 @@ class StartTable:
             # drop idx
             df = pd.DataFrame(self.start_table).drop(columns=[3])
             df.columns = self.header
+            df["field_name"] = df["field_name"].map(self.field_name2code)
+            df["date"] = pd.to_datetime(df["date"], format="%y%m%d")
             df["class"] = df["class"].map(self.racer_class)
 
             for col in int_cols:

@@ -11,6 +11,7 @@ scikit-learn = "*"
 "beautifulsoup4" = "*"
 lxml = "*"
 requests = "*"
+pyyaml = "*"
 
 [dev-packages]
 

@@ -1,10 +1,11 @@
 import re
+from pathlib import Path
 from urllib.parse import urlparse, parse_qsl
 
 import lxml.html
 import pandas as pd
 import requests
-from pathlib import Path
+
 from boatrace.util import Config
 
 config = Config(path=Path(__file__).parent / "params.yaml")
@@ -146,7 +147,10 @@ class StartTable:
         players = 6
         start_table = []
         xpath_prefix = "/html/body/main/div/div/div/div[2]/div[4]/table/"
-        query_params = parse_qsl(self.parse_url.query)
+        query_params = dict(parse_qsl(self.parse_url.query))
+        date = query_params["hd"]
+        race_idx = query_params["rno"]
+        field_name = query_params["jcd"]
         for idx in range(1, players + 1):
             player_elem_1 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[1]/".format(
                 idx)
@@ -183,7 +187,7 @@ class StartTable:
             for xpath in race_results:
                 for elem in root.xpath(xpath):
                     elements.append(elem.strip())
-            start_table.append(elements)
+            start_table.append([date, field_name, race_idx] + elements)
         return start_table
 
     def preprocess(self):
@@ -194,10 +198,14 @@ class StartTable:
         cat_cols = ["registration_number", "mortar", "board"]
 
         if self.is_scrape:
-            df = pd.DataFrame(self.start_table).drop(columns=[2, 3, 4, 7, 8, 9,
-                                                              12, 15, 18, 21])
-            df = df.loc[:, [0, 5, 6, 1, 10, 11, 13, 14, 16, 17, 19, 20]]
+            df = pd.DataFrame(self.start_table).drop(
+                columns=[5, 6, 7, 10, 11, 12,
+                         15, 18, 21, 24])
+            df = df.loc[:, [0, 1, 2, 3, 8, 9, 4, 13, 14, 16, 17, 19, 20, 22, 23]]
             df.columns = self.header
+            df["field_name"] = df["field_name"].astype(int)
+            df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
+            df["race_idx"] = df["race_idx"].astype(int)
             df["age"] = df["age"].str.replace("歳", "")
             df["weight"] = df["weight"].str.replace("kg", "")
             df["class"] = df["class"].map(self.racer_class)

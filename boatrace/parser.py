@@ -52,7 +52,8 @@ class AdvanceInfo:
 
 class StartTable:
     def __init__(self, url=None, path=None):
-        self.header = ["registration_number", "age", "weight", "class",
+        self.header = ["date", "field_name", "race_idx", "registration_number",
+                       "age", "weight", "class",
                        "global_win_perc", "global_win_in_second",
                        "local_win_perc", "local_win_in_second",
                        "mortar", "mortar_win_in_second", "board",
@@ -109,7 +110,8 @@ class StartTable:
                     begin_race_idx = end_race_idx + result_header_length + interval_per_race_length
                 end_race_idx = begin_race_idx + players
                 for line in one_day_lines[begin_race_idx:end_race_idx]:
-                    tables.append(self.__preprocess_line(line))
+                    tables.append([date, field_name,
+                                   race_idx + 1] + self.__preprocess_line(line))
         self.start_table = tables
 
     def __preprocess_line(self, line):
@@ -201,7 +203,7 @@ class StartTable:
             return df
         else:
             # drop idx
-            df = pd.DataFrame(self.start_table).drop(columns=[0])
+            df = pd.DataFrame(self.start_table).drop(columns=[3])
             df.columns = self.header
             df["class"] = df["class"].map(self.racer_class)
 

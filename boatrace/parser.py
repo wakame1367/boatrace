@@ -54,7 +54,7 @@ class StartTable:
                        "global_win_perc", "global_win_in_second",
                        "local_win_perc", "local_win_in_second",
                        "mortar", "mortar_win_in_second", "board", "board_win_in_second"]
-        self.race_class = {"A1": 3, "A2": 2, "B1": 1, "B2": 0}
+        self.racer_class = {"A1": 3, "A2": 2, "B1": 1, "B2": 0}
         self.is_scrape = False
         if url or path:
             if url:
@@ -118,7 +118,7 @@ class StartTable:
         target = target.replace(age, "")
         weight = re.search(r"\d+", target).group()
         c = None
-        for c in self.race_class.keys():
+        for c in self.racer_class.keys():
             if c in target:
                 break
         del split_line[1]
@@ -178,7 +178,7 @@ class StartTable:
             df.columns = self.header
             df["age"] = df["age"].str.replace("歳", "")
             df["weight"] = df["weight"].str.replace("kg", "")
-            df["class"] = df["class"].map(self.race_class)
+            df["class"] = df["class"].map(self.racer_class)
             for col in int_cols:
                 df[col] = df[col].astype(int)
             for col in float_cols:
@@ -190,7 +190,7 @@ class StartTable:
             # drop idx
             df = pd.DataFrame(self.start_table).drop(columns=[0])
             df.columns = self.header
-            df["class"] = df["class"].map(self.race_class)
+            df["class"] = df["class"].map(self.racer_class)
 
             for col in int_cols:
                 df[col] = df[col].astype(int)

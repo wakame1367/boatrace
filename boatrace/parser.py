@@ -1,5 +1,5 @@
 import re
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qsl
 
 import lxml.html
 import pandas as pd
@@ -28,7 +28,8 @@ class AdvanceInfo:
         wind_speed_xpath = xpath_weather_prefix + "div[3]/div/span[2]/text()"
         water_temp_xpath = xpath_weather_prefix + "div[5]/div/span[2]/text()"
         wave_height_xpath = xpath_weather_prefix + "div[6]/div/span[2]/text()"
-        for xpath in [temp_xpath, weather_xpath, wind_speed_xpath, water_temp_xpath, wave_height_xpath]:
+        for xpath in [temp_xpath, weather_xpath, wind_speed_xpath,
+                      water_temp_xpath, wave_height_xpath]:
             for elem in root.xpath(xpath):
                 enf_info.append(elem.strip())
         for idx in range(1, players + 1):
@@ -38,7 +39,8 @@ class AdvanceInfo:
             exhibition_xpath = player_elem + "tr[1]/td[5]/text()"
             tilt_xpath = player_elem + "tr[1]/td[6]/text()"
             assigned_weight_xpath = player_elem + "tr[3]/td[1]/text()"
-            for xpath in [weight_xpath, exhibition_xpath, tilt_xpath, assigned_weight_xpath]:
+            for xpath in [weight_xpath, exhibition_xpath, tilt_xpath,
+                          assigned_weight_xpath]:
                 for elem in root.xpath(xpath):
                     elements.append(elem.strip())
             table.append(enf_info + elements)
@@ -53,7 +55,8 @@ class StartTable:
         self.header = ["registration_number", "age", "weight", "class",
                        "global_win_perc", "global_win_in_second",
                        "local_win_perc", "local_win_in_second",
-                       "mortar", "mortar_win_in_second", "board", "board_win_in_second"]
+                       "mortar", "mortar_win_in_second", "board",
+                       "board_win_in_second"]
         self.racer_class = {"A1": 3, "A2": 2, "B1": 1, "B2": 0}
         self.is_scrape = False
         if url or path:
@@ -94,7 +97,9 @@ class StartTable:
                     end_idx.append(line_no)
         for b_idx, e_idx in zip(begin_idx, end_idx):
             # skip headers
-            race_info = raw_lines[b_idx + 1].strip()
+            race_info = raw_lines[b_idx + 1].strip().replace("\u3000",
+                                                             "").split()
+            field_name = race_info[0].replace("ボートレース", "")
             one_day_lines = raw_lines[b_idx + race_header_length:e_idx]
             end_race_idx = 0
             for race_idx in range(interval_per_day_length):
@@ -132,13 +137,19 @@ class StartTable:
         players = 6
         start_table = []
         xpath_prefix = "/html/body/main/div/div/div/div[2]/div[4]/table/"
+        query_params = parse_qsl(self.parse_url.query)
         for idx in range(1, players + 1):
-            player_elem_1 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[1]/".format(idx)
-            player_elem_2 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[2]/".format(idx)
-            player_elem_3 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[3]/".format(idx)
+            player_elem_1 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[1]/".format(
+                idx)
+            player_elem_2 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[2]/".format(
+                idx)
+            player_elem_3 = xpath_prefix + "tbody[{}]/tr[1]/td[3]/div[3]/".format(
+                idx)
             race_results = []
             for td_idx in range(4, 9):
-                race_results.append(xpath_prefix + "tbody[{}]/tr[1]/td[{}]/text()".format(idx, td_idx))
+                race_results.append(
+                    xpath_prefix + "tbody[{}]/tr[1]/td[{}]/text()".format(idx,
+                                                                          td_idx))
             reg_number_xpath = player_elem_1 + "text()"
             class_xpath = player_elem_1 + "span/text()"
             profile_url_xpath = player_elem_2 + "a/@href"
@@ -152,8 +163,10 @@ class StartTable:
                 elements.append(elem.strip())
             for elem in root.xpath(profile_url_xpath):
                 parse_profile_url = urlparse(elem.strip())
-                profile_url = self.parse_url._replace(path=parse_profile_url.path)
-                profile_url = profile_url._replace(query=parse_profile_url.query)
+                profile_url = self.parse_url._replace(
+                    path=parse_profile_url.path)
+                profile_url = profile_url._replace(
+                    query=parse_profile_url.query)
                 elements.append(profile_url.geturl())
             for elem in root.xpath(player_info_xpath):
                 for e in elem.strip().split("/"):
@@ -203,13 +216,15 @@ class StartTable:
 
 class Result:
     def __init__(self):
-        self.race_info_header = ["date", "boat_race_track", "course_length", "weather",
+        self.race_info_header = ["date", "boat_race_track", "course_length",
+                                 "weather",
                                  "wind_direction", "wind_speed", "wave_height"]
         self.race_result_header = ["idx", "landing_boat",
                                    "registration_number",
                                    "player_name", "mortar", "board",
                                    "exhibition",
-                                   "approach", "start_timing", "race_time", "is_anomaly_landing"]
+                                   "approach", "start_timing", "race_time",
+                                   "is_anomaly_landing"]
         self.header = self.race_info_header + self.race_result_header
         self.dtypes = [int, int, int, str, int, int, float, int, float, str]
         self.sep_size = 79
@@ -224,11 +239,12 @@ class Result:
         self.false_start_pattern = re.compile(r"F")
         self.delay_pattern = re.compile(r"L[0-1]")
         self.miss_race_pattern = re.compile(r"K[0-1]")
-        self.landing_boat_pattern = re.compile("|".join(pat.pattern for pat in [self.landing_boat_pattern,
-                                                                                self.disqualification_pattern,
-                                                                                self.false_start_pattern,
-                                                                                self.delay_pattern,
-                                                                                self.miss_race_pattern]))
+        self.landing_boat_pattern = re.compile(
+            "|".join(pat.pattern for pat in [self.landing_boat_pattern,
+                                             self.disqualification_pattern,
+                                             self.false_start_pattern,
+                                             self.delay_pattern,
+                                             self.miss_race_pattern]))
         self.course_length_pattern = re.compile(r"H(\d+)m")
         self.wave_pattern = re.compile(r"波.*(\d+cm)")
         self.wind_pattern = re.compile(r"風(.*?)(\d+m)")
@@ -259,7 +275,8 @@ class Result:
                 if raw_line == self.separator:
                     sep_index.append(line_no)
                 elif boat_race_track:
-                    boat_race_tracks.append(boat_race_track.group().replace("\u3000", "").strip())
+                    boat_race_tracks.append(
+                        boat_race_track.group().replace("\u3000", "").strip())
                 raw_lines.append(raw_line)
         txt = []
         # Retrieve text between delimiters and delimiters
@@ -270,14 +287,18 @@ class Result:
         new_txt = []
         # strip text
         for line in txt:
-            rline = line.strip().replace("\u3000", "").replace(".  .", "-").replace("L .", "- -") \
+            rline = line.strip().replace("\u3000", "").replace(".  .",
+                                                               "-").replace(
+                "L .", "- -") \
                 .replace("K .         K .", "- - -")
             is_race_info = self.course_length_pattern.search(rline)
             if is_race_info:
                 # cut out after course_length
                 rline = rline[is_race_info.span()[0]:]
-                wave_info = [w.strip() for w in self.wave_pattern.search(rline).groups()]
-                wind_info = [w.strip() for w in self.wind_pattern.search(rline).groups()]
+                wave_info = [w.strip() for w in
+                             self.wave_pattern.search(rline).groups()]
+                wind_info = [w.strip() for w in
+                             self.wind_pattern.search(rline).groups()]
                 # get course_length and wether
                 split_line = rline.split()[:2] + wind_info + wave_info
             else:
@@ -332,8 +353,10 @@ class Result:
 class Player:
     def __init__(self):
         # https://www.boatrace.jp/owpc/pc/extra/data/layout.html
-        self.split_bytes = [4, 16, 15, 4, 2, 1, 6, 1, 2, 3, 2, 2, 4, 4, 3, 3, 3, 2, 2, 3,
-                            3, 4, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3,
+        self.split_bytes = [4, 16, 15, 4, 2, 1, 6, 1, 2, 3, 2, 2, 4, 4, 3, 3, 3,
+                            2, 2, 3,
+                            3, 4, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3, 3,
+                            4, 3, 3, 3, 4, 3, 3,
                             2, 2, 2, 4, 4, 4, 1, 8, 8, 3,
                             3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2,
                             3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2,

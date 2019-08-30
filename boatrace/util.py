@@ -13,3 +13,7 @@ class Config:
     def get_field_code(self):
         jcd = self.config["jcd"]
         return dict(zip(range(1, len(jcd)+1), jcd))
+
+    def get_racer_class(self):
+        racer_class = self.config["racer_class"]
+        return dict(zip(range(len(racer_class)), racer_class))

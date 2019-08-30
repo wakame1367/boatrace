@@ -1,8 +1,8 @@
 import re
-import pandas as pd
 from urllib.parse import urlparse
 
 import lxml.html
+import pandas as pd
 import requests
 
 
@@ -165,15 +165,25 @@ class StartTable:
         return start_table
 
     def preprocess(self):
-        int_cols = ["age", "weight"]
-        float_cols = ["global_win_perc", "global_win_in_second",
+        int_cols = ["age"]
+        float_cols = ["weight", "global_win_perc", "global_win_in_second",
                       "local_win_perc", "local_win_in_second",
                       "mortar_win_in_second", "board_win_in_second"]
         cat_cols = ["registration_number", "mortar", "board"]
+
         if self.is_scrape:
             df = pd.DataFrame(self.start_table).drop(columns=[2, 3, 4, 7, 8, 9,
                                                               12, 15, 18, 21])
+            df = df.loc[:, [0, 5, 6, 1, 10, 11, 13, 14, 16, 17, 19, 20]]
             df.columns = self.header
+            df["age"] = df["age"].str.replace("歳", "")
+            df["weight"] = df["weight"].str.replace("kg", "")
+            for col in int_cols:
+                df[col] = df[col].astype(int)
+            for col in float_cols:
+                df[col] = df[col].astype(float)
+            for col in cat_cols:
+                df[col] = df[col].astype("category")
             return df
         else:
             # drop idx

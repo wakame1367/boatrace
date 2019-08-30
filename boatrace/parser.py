@@ -178,6 +178,7 @@ class StartTable:
             df.columns = self.header
             df["age"] = df["age"].str.replace("歳", "")
             df["weight"] = df["weight"].str.replace("kg", "")
+            df["class"] = df["class"].map(self.race_class)
             for col in int_cols:
                 df[col] = df[col].astype(int)
             for col in float_cols:

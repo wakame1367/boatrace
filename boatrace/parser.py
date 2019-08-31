@@ -131,7 +131,7 @@ class StartTable:
         target = target.replace(reg_number, "")
         age = re.search(r"\d+", target).group()
         # replace age = weight
-        target = target.replace(age, "", count=1)
+        target = target.replace(age, "", 1)
         weight = re.search(r"\d+", target).group()
         c = None
         for c in self.racer_class.keys():

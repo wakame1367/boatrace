@@ -123,26 +123,37 @@ class StartTable:
         self.start_table = tables
 
     def __preprocess_line(self, line):
-        split_line = line.strip().replace("\u3000", "").split()
-        # drop after index 10 to same length
-        split_line = split_line[:10]
-        target = split_line[1]
-        reg_number = re.match(r"\d+", target).group()
-        target = target.replace(reg_number, "")
-        age = re.search(r"\d+", target).group()
-        # replace age = weight
-        target = target.replace(age, "", 1)
-        weight = re.search(r"\d+", target).group()
+        # pre_define length split line
+        win_perc_length = 5
+        second_win_perc_length = 6
+        id_length = 3
+        lengths = [win_perc_length, second_win_perc_length] * 2 +\
+                  [id_length, second_win_perc_length] * 2
+        raw_line = line.strip().replace("\u3000", "")
         c = None
         for c in self.racer_class.keys():
-            if c in target:
+            if c in raw_line:
                 break
-        del split_line[1]
-        split_line.insert(1, reg_number)
-        split_line.insert(2, age)
-        split_line.insert(3, weight)
-        split_line.insert(4, c)
-        return split_line
+        # split racer_class(A1/A2/B1/B2)
+        split_line = line.split(c)
+        # split_line[0] -> "1 3789..."
+        racer_idx = split_line[0][0].strip()
+        racer_info = split_line[0][1:].strip()
+        reg_number = re.match(r"\d+", racer_info).group()
+        racer_info = racer_info.replace(reg_number, "")
+        age = re.search(r"\d+", racer_info).group()
+        # replace age = weight
+        racer_info = racer_info.replace(age, "", 1)
+        weight = re.search(r"\d+", racer_info).group()
+
+        race_times = split_line[1]
+        start = 0
+        time_info = []
+        for length in lengths:
+            time_info.append(race_times[start:start + length].strip())
+            start += length
+
+        return [racer_idx, reg_number, age, weight, c] + time_info
 
     def scrape(self, root):
         players = 6

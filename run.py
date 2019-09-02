@@ -117,6 +117,20 @@ def main():
         verbose_eval=1
     )
 
+    lgb_model_cv = lgb.cv(
+        lgbm_params,
+        lgb_train,
+        categorical_feature=cat_feature_idx,
+        num_boost_round=5000,
+        # valid_sets=[lgb_train, lgb_valid],
+        # valid_names=['train','valid'],
+        early_stopping_rounds=400,
+        verbose_eval=1,
+        nfold=5,
+        shuffle=True,
+        seed=42
+    )
+
 
 if __name__ == '__main__':
     main()

@@ -1,10 +1,8 @@
 import argparse
-import numpy as np
+import re
 from pathlib import Path
 
-import pandas as pd
-
-from boatrace.parser import StartTable
+from boatrace.parser import StartTable, RaceResult
 from boatrace.util import Config
 
 
@@ -15,57 +13,77 @@ def get_arguments():
     return _args
 
 
+# https://stackoverflow.com/questions/12093940/
+# reading-files-in-a-particular-order-in-python
+def numerical_sort(value):
+    numbers = re.compile(r'(\d+)')
+    parts = numbers.split(value)
+    parts[1::2] = map(int, parts[1::2])
+    return parts
+
+
 def main():
     args = get_arguments()
     config = Config(Path("boatrace/params.yaml"))
     root_path = Path(args.lzh_path)
+    root_path2 = Path("resources/download_raceresult")
+    race_info_paths = sorted(root_path.glob("*.TXT"),
+                             key=lambda x: numerical_sort(x.stem))
+    race_result_paths = sorted(root_path2.glob("*.TXT"),
+                               key=lambda x: numerical_sort(x.stem))
     # unlzh(root_path)
     data = []
-    for idx, path in enumerate(root_path.glob("*.TXT")):
-        st = StartTable(path=path)
-        df = st.preprocess()
-        data.append(df)
+    stop = "181231"
+    for race_info_path, race_result_path in zip(race_info_paths,
+                                                race_result_paths):
+        st = StartTable(path=race_info_path).preprocess()
+        rr = RaceResult(path=race_result_path).preprocess()
+        df = st.merge(rr, on=["date", "field_name", "race_idx",
+                              "registration_number"])
+        print(df.shape)
+        if "130110" in race_info_path.stem:
+            break
 
-    new_df = pd.concat(data, ignore_index=True)
-    print(new_df.shape)
-    print(new_df.head())
-    print(new_df.isnull().sum())
-    print(new_df.columns)
-
-    seed = 20190801
-    max_position = 4
-    lgbm_params = {
-        'task': 'train',
-        'boosting_type': 'gbdt',
-        'objective': 'lambdarank',
-        'metric': 'ndcg',  # for lambdarank
-        'ndcg_eval_at': [3],  # for lambdarank
-        'max_position': max_position,  # for lambdarank
-        'learning_rate': 1e-3,
-        'min_data': 1,
-        'min_data_in_bin': 1,
-    }
-
-    all_data = new_df[new_df["field_name"] == 1]
-
-    train_query = (("2016-01-01" <= all_data["date"]) & (
-            all_data["date"] <= "2017-12-31"))
-    val_query = (("2018-01-01" <= all_data["date"]) & (
-            all_data["date"] <= "2018-8-31"))
-    test_query = (("2018-08-31" <= all_data["date"]) & (
-            all_data["date"] <= "2018-10-31"))
-
-    train = all_data[train_query]
-    valid = all_data[val_query]
-    test = all_data[test_query]
-    tr_length, val_length, test_length = train.shape[0], valid.shape[0], \
-                                         test.shape[0]
-    print(tr_length, val_length, test_length)
-
-    drop_cols = ["date", "field_name"]
-
-    tr_target = np.array(list(range(1, 7)) * (tr_length // 6))
-    val_target = np.array(list(range(1, 7)) * (val_length // 6))
+    # new_df = pd.concat(data, ignore_index=True)
+    # print(new_df.shape)
+    # print(new_df.head())
+    # print(new_df.isnull().sum())
+    # print(new_df.columns)
+    #
+    # seed = 20190801
+    # max_position = 4
+    # lgbm_params = {
+    #     'task': 'train',
+    #     'boosting_type': 'gbdt',
+    #     'objective': 'lambdarank',
+    #     'metric': 'ndcg',  # for lambdarank
+    #     'ndcg_eval_at': [3],  # for lambdarank
+    #     'max_position': max_position,  # for lambdarank
+    #     'learning_rate': 1e-3,
+    #     'min_data': 1,
+    #     'min_data_in_bin': 1,
+    # }
+    #
+    # all_data = new_df[new_df["field_name"] == 1]
+    #
+    # train_query = (("2016-01-01" <= all_data["date"]) & (
+    #         all_data["date"] <= "2017-12-31"))
+    # val_query = (("2018-01-01" <= all_data["date"]) & (
+    #         all_data["date"] <= "2018-8-31"))
+    # test_query = (("2018-08-31" <= all_data["date"]) & (
+    #         all_data["date"] <= "2018-10-31"))
+    #
+    # train = all_data[train_query]
+    # valid = all_data[val_query]
+    # test = all_data[test_query]
+    # tr_length, val_length, test_length = train.shape[0], valid.shape[0], \
+    #                                      test.shape[0]
+    # print(tr_length, val_length, test_length)
+    #
+    # drop_cols = ["date", "field_name"]
+    #
+    # tr_target = np.array(list(range(1, 7)) * (tr_length // 6))
+    # val_target = np.array(list(range(1, 7)) * (val_length // 6))
 
 
 if __name__ == '__main__':

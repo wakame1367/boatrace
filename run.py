@@ -36,7 +36,7 @@ def main():
                                key=lambda x: numerical_sort(x.stem))
     # unlzh(root_path)
     data = []
-    stop = "181231"
+    stop = "141231"
     for race_info_path, race_result_path in zip(race_info_paths,
                                                 race_result_paths):
         st = StartTable(path=race_info_path).preprocess()
@@ -71,11 +71,11 @@ def main():
     all_data = new_df[new_df["field_name"] == 1]
 
     train_query = (("2013-01-01" <= all_data["date"]) & (
-            all_data["date"] <= "2017-12-31"))
-    val_query = (("2018-01-01" <= all_data["date"]) & (
-            all_data["date"] <= "2018-8-31"))
-    test_query = (("2018-08-31" <= all_data["date"]) & (
-            all_data["date"] <= "2018-10-31"))
+            all_data["date"] <= "2013-12-31"))
+    val_query = (("2014-01-01" <= all_data["date"]) & (
+            all_data["date"] <= "2014-8-31"))
+    test_query = (("2014-08-31" <= all_data["date"]) & (
+            all_data["date"] <= "2014-10-31"))
 
     train = all_data[train_query]
     valid = all_data[val_query]

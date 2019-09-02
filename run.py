@@ -1,7 +1,9 @@
 import argparse
 from pathlib import Path
 
-from boatrace.lzh import unlzh
+import pandas as pd
+
+from boatrace.parser import StartTable
 
 
 def get_arguments():
@@ -13,7 +15,14 @@ def get_arguments():
 
 def main():
     args = get_arguments()
-    unlzh(Path(args.lzh_path))
+    root_path = Path(args.lzh_path)
+    # unlzh(root_path)
+    data = []
+    for path in root_path.glob("*.TXT"):
+        st = StartTable(path=path)
+        df = st.preprocess()
+        data.append(df)
+    new_df = pd.concat(data, ignore_index=True)
 
 
 if __name__ == '__main__':

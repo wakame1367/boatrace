@@ -105,6 +105,9 @@ class StartTable:
                 if "BEND" in raw_line:
                     end_idx.append(line_no)
         for b_idx, e_idx in zip(begin_idx, end_idx):
+            # skip race because not data
+            if e_idx - b_idx < 10:
+                continue
             # skip headers
             race_info = raw_lines[b_idx + 1].strip().replace("\u3000",
                                                              "").split()

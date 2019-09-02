@@ -253,7 +253,8 @@ class RaceResult:
     def __init__(self, path):
         self.__parse(path)
         self.field_name2code = field_name2code
-        self.header = ["date", "field_name", "race_idx", "registration_number"]
+        self.header = ["date", "field_name", "race_idx", "rank",
+                       "registration_number"]
 
     def __parse(self, path, encoding="cp932"):
         date = path.stem[1:]
@@ -291,9 +292,10 @@ class RaceResult:
                     begin_race_idx = end_race_idx + result_header_length + \
                                      interval_per_race_length
                 end_race_idx = begin_race_idx + players
-                for line in one_day_lines[begin_race_idx:end_race_idx]:
-                    tables.append([date, field_name,
-                                   race_idx + 1] + self.__preprocess_line(line))
+                for rank, line in enumerate(
+                        one_day_lines[begin_race_idx:end_race_idx], 1):
+                    tables.append([date, field_name, race_idx + 1, rank]
+                                  + self.__preprocess_line(line))
         self.start_table = tables
 
     def __preprocess_line(self, line):
@@ -302,7 +304,7 @@ class RaceResult:
 
     def preprocess(self):
         cat_cols = ["registration_number"]
-        df = pd.DataFrame(self.start_table).drop(columns=[3, 4, 6, 7, 8])
+        df = pd.DataFrame(self.start_table).drop(columns=[4, 5, 7, 8, 9])
         df.columns = self.header
         df["field_name"] = df["field_name"].map(self.field_name2code)
         df["date"] = pd.to_datetime(df["date"], format="%y%m%d")

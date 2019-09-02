@@ -130,7 +130,7 @@ class StartTable:
         win_perc_length = 5
         second_win_perc_length = 6
         id_length = 3
-        lengths = [win_perc_length, second_win_perc_length] * 2 +\
+        lengths = [win_perc_length, second_win_perc_length] * 2 + \
                   [id_length, second_win_perc_length] * 2
         raw_line = line.strip().replace("\u3000", "")
         c = None
@@ -216,7 +216,8 @@ class StartTable:
             df = pd.DataFrame(self.start_table).drop(
                 columns=[5, 6, 7, 10, 11, 12,
                          15, 18, 21, 24])
-            df = df.loc[:, [0, 1, 2, 3, 8, 9, 4, 13, 14, 16, 17, 19, 20, 22, 23]]
+            df = df.loc[:,
+                 [0, 1, 2, 3, 8, 9, 4, 13, 14, 16, 17, 19, 20, 22, 23]]
             df.columns = self.header
             df["field_name"] = df["field_name"].astype(int)
             df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
@@ -246,6 +247,54 @@ class StartTable:
             for col in cat_cols:
                 df[col] = df[col].astype("category")
             return df
+
+
+class RaceResult:
+    def __init__(self, path):
+        self.__parse(path)
+        self.field_name2code = field_name2code
+
+    def __parse(self, path, encoding="cp932"):
+        date = path.stem[1:]
+        tables = []
+        raw_lines = []
+        begin_idx = []
+        end_idx = []
+        race_header_length = 12
+        result_header_length = 3
+        interval_per_race_length = 12
+        interval_per_day_length = 12
+        players = 6
+        with path.open("r", encoding=encoding) as lines:
+            for line_no, line in enumerate(lines):
+                raw_line = line.strip()
+                raw_lines.append(raw_line)
+                if "KBGN" in raw_line:
+                    begin_idx.append(line_no)
+                if "KEND" in raw_line:
+                    end_idx.append(line_no)
+        for b_idx, e_idx in zip(begin_idx, end_idx):
+            # skip race because not data
+            if e_idx - b_idx < 10:
+                continue
+            # skip headers
+            race_info = raw_lines[b_idx + 1].strip() \
+                .replace("\u3000", "").replace("［成績］", "").split()
+            field_name = race_info[0]
+            one_day_lines = raw_lines[b_idx + race_header_length:e_idx]
+            end_race_idx = 0
+            for race_idx in range(interval_per_day_length):
+                if race_idx == 0:
+                    begin_race_idx = race_idx * players + result_header_length
+                else:
+                    begin_race_idx = end_race_idx + result_header_length + interval_per_race_length
+                end_race_idx = begin_race_idx + players
+                for line in one_day_lines[begin_race_idx:end_race_idx]:
+                    tables.append([date, field_name, race_idx + 1])
+        self.start_table = tables
+
+    def __preprocess_line(self, line):
+        return line
 
 
 class Result:

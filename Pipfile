@@ -11,6 +11,7 @@ scikit-learn = "*"
 lxml = "*"
 requests = "*"
 pyyaml = "*"
+lightgbm = "*"
 
 [dev-packages]
 

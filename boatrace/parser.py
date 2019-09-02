@@ -253,6 +253,7 @@ class RaceResult:
     def __init__(self, path):
         self.__parse(path)
         self.field_name2code = field_name2code
+        self.header = ["date", "field_name", "race_idx", "registration_number"]
 
     def __parse(self, path, encoding="cp932"):
         date = path.stem[1:]
@@ -260,7 +261,7 @@ class RaceResult:
         raw_lines = []
         begin_idx = []
         end_idx = []
-        race_header_length = 12
+        race_header_length = 27
         result_header_length = 3
         interval_per_race_length = 12
         interval_per_day_length = 12
@@ -287,14 +288,27 @@ class RaceResult:
                 if race_idx == 0:
                     begin_race_idx = race_idx * players + result_header_length
                 else:
-                    begin_race_idx = end_race_idx + result_header_length + interval_per_race_length
+                    begin_race_idx = end_race_idx + result_header_length + \
+                                     interval_per_race_length
                 end_race_idx = begin_race_idx + players
                 for line in one_day_lines[begin_race_idx:end_race_idx]:
-                    tables.append([date, field_name, race_idx + 1])
+                    tables.append([date, field_name,
+                                   race_idx + 1] + self.__preprocess_line(line))
         self.start_table = tables
 
     def __preprocess_line(self, line):
-        return line
+        raw_line = line.strip().replace("\u3000", "").split()[:6]
+        return raw_line
+
+    def preprocess(self):
+        cat_cols = ["registration_number"]
+        df = pd.DataFrame(self.start_table).drop(columns=[3, 4, 6, 7, 8])
+        df.columns = self.header
+        df["field_name"] = df["field_name"].map(self.field_name2code)
+        df["date"] = pd.to_datetime(df["date"], format="%y%m%d")
+        for col in cat_cols:
+            df[col] = df[col].astype("category")
+        return df
 
 
 class Result:

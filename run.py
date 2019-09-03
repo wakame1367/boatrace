@@ -1,9 +1,10 @@
 import argparse
 import re
-import numpy as np
-import lightgbm as lgb
-import pandas as pd
 from pathlib import Path
+
+import lightgbm as lgb
+import numpy as np
+import pandas as pd
 
 from boatrace.parser import StartTable, RaceResult
 from boatrace.util import Config
@@ -14,6 +15,45 @@ def get_arguments():
     _parser.add_argument("lzh_path", type=str)
     _args = _parser.parse_args()
     return _args
+
+
+# reference:
+# https://www.kaggle.com/kenmatsu4/
+# using-trained-booster-from-lightgbm-cv-w-callback
+class ModelExtractionCallback:
+    """Callback class for retrieving trained model from lightgbm.cv()
+    NOTE: This class depends on '_CVBooster' which is hidden class, so it might doesn't work if the specification is changed.
+    """
+
+    def __init__(self):
+        self._model = None
+
+    def __call__(self, env):
+        # Saving _CVBooster object.
+        self._model = env.model
+
+    def _assert_called_cb(self):
+        if self._model is None:
+            # Throw exception if the callback class is not called.
+            raise RuntimeError('callback has not called yet')
+
+    @property
+    def boosters_proxy(self):
+        self._assert_called_cb()
+        # return Booster object
+        return self._model
+
+    @property
+    def raw_boosters(self):
+        self._assert_called_cb()
+        # return list of Booster
+        return self._model.boosters
+
+    @property
+    def best_iteration(self):
+        self._assert_called_cb()
+        # return boosting round when early stopping.
+        return self._model.best_iteration
 
 
 # https://stackoverflow.com/questions/12093940/
@@ -117,6 +157,14 @@ def main():
         verbose_eval=1
     )
 
+    lgb_clf.save_model("resources/model_1.txt",
+                       num_iteration=lgb_clf.best_iteration)
+
+    extraction_cb = ModelExtractionCallback()
+    callbacks = [
+        extraction_cb,
+    ]
+
     lgb_model_cv = lgb.cv(
         lgbm_params,
         lgb_train,
@@ -128,8 +176,18 @@ def main():
         verbose_eval=1,
         nfold=5,
         shuffle=True,
-        seed=42
+        seed=42,
+        callbacks=callbacks
     )
+
+    # Retrieving booster and training information.
+    proxy = extraction_cb.boosters_proxy
+    boosters = extraction_cb.raw_boosters
+    best_iteration = extraction_cb.best_iteration
+
+    for i, booster in enumerate(boosters):
+        booster.save_model("resources/model_1_cv_{}.txt".format(i),
+                           num_iteration=best_iteration)
 
 
 if __name__ == '__main__':

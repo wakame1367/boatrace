@@ -65,6 +65,98 @@ def numerical_sort(value):
     return parts
 
 
+def lgb_cv(df, field_code, rank2win_points, lgb_params, players=6):
+    all_data = df[df["field_name"] == field_code]
+    all_data["rank"] = all_data["rank"].map(rank2win_points)
+    train_query = (("2013-01-01" <= all_data["date"]) & (
+            all_data["date"] <= "2017-12-31"))
+    val_query = (("2018-01-01" <= all_data["date"]) & (
+            all_data["date"] <= "2018-8-31"))
+    test_query = (("2018-08-31" <= all_data["date"]) & (
+            all_data["date"] <= "2018-10-31"))
+
+    train = all_data[train_query]
+    valid = all_data[val_query]
+    test = all_data[test_query]
+    test.to_csv("resources/test_{}.csv".format(field_code), index=False)
+    tr_length, val_length, test_length = train.shape[0], valid.shape[0], \
+                                         test.shape[0]
+    print(tr_length, val_length, test_length)
+    tr_target = train["rank"]
+    val_target = valid["rank"]
+    te_target = test["rank"]
+    drop_cols = ["date", "field_name", "race_idx", "rank"]
+
+    tr_group = np.array([players] * (tr_length // players))
+    val_group = np.array([players] * (val_length // players))
+    train.drop(columns=drop_cols, inplace=True)
+    valid.drop(columns=drop_cols, inplace=True)
+    test.drop(columns=drop_cols, inplace=True)
+
+    print(train.shape)
+    print(valid.shape)
+    print(tr_group.shape)
+    print(val_group.shape)
+
+    for col in train.columns:
+        train[col] = train[col].astype(int)
+
+    for col in valid.columns:
+        valid[col] = valid[col].astype(int)
+    cat_feature_idx = [idx for idx, col in enumerate(train.columns)
+                       if col in ["registration_number", "mortar", "board"]]
+
+    lgb_train = lgb.Dataset(train, tr_target,
+                            categorical_feature=cat_feature_idx,
+                            group=tr_group)
+    lgb_valid = lgb.Dataset(valid, val_target,
+                            categorical_feature=cat_feature_idx,
+                            group=val_group)
+
+    lgb_clf = lgb.train(
+        lgb_params,
+        lgb_train,
+        categorical_feature=cat_feature_idx,
+        num_boost_round=2000,
+        valid_sets=[lgb_train, lgb_valid],
+        valid_names=['train', 'valid'],
+        early_stopping_rounds=200,
+        verbose_eval=1
+    )
+
+    lgb_clf.save_model("resources/model/model_{}.txt".format(field_code),
+                       num_iteration=lgb_clf.best_iteration)
+
+    extraction_cb = ModelExtractionCallback()
+    callbacks = [
+        extraction_cb,
+    ]
+
+    lgb_model_cv = lgb.cv(
+        lgb_params,
+        lgb_train,
+        categorical_feature=cat_feature_idx,
+        num_boost_round=5000,
+        # valid_sets=[lgb_train, lgb_valid],
+        # valid_names=['train','valid'],
+        early_stopping_rounds=400,
+        verbose_eval=1,
+        nfold=5,
+        shuffle=True,
+        seed=42,
+        callbacks=callbacks
+    )
+
+    # Retrieving booster and training information.
+    proxy = extraction_cb.boosters_proxy
+    boosters = extraction_cb.raw_boosters
+    best_iteration = extraction_cb.best_iteration
+
+    for i, booster in enumerate(boosters):
+        booster.save_model("resources/model_{}_cv_{}.txt".format(field_code, i),
+                           num_iteration=best_iteration)
+
+
 def main():
     args = get_arguments()
     config = Config(Path("boatrace/params.yaml"))
@@ -108,96 +200,8 @@ def main():
         'min_data_in_bin': 1,
     }
     rank2win_points = {1: 10, 2: 8, 3: 6, 4: 4, 5: 2, 6: 1}
-    all_data = new_df[new_df["field_name"] == 1]
-    all_data["rank"] = all_data["rank"].map(rank2win_points)
-    train_query = (("2013-01-01" <= all_data["date"]) & (
-            all_data["date"] <= "2017-12-31"))
-    val_query = (("2018-01-01" <= all_data["date"]) & (
-            all_data["date"] <= "2018-8-31"))
-    test_query = (("2018-08-31" <= all_data["date"]) & (
-            all_data["date"] <= "2018-10-31"))
-
-    train = all_data[train_query]
-    valid = all_data[val_query]
-    test = all_data[test_query]
-    valid.to_csv("resources/valid.csv", index=False)
-    test.to_csv("resources/test.csv", index=False)
-    tr_length, val_length, test_length = train.shape[0], valid.shape[0], \
-                                         test.shape[0]
-    print(tr_length, val_length, test_length)
-    tr_target = train["rank"]
-    val_target = valid["rank"]
-    te_target = test["rank"]
-    drop_cols = ["date", "field_name", "race_idx", "rank"]
-
-    tr_group = np.array([players] * (tr_length // players))
-    val_group = np.array([players] * (val_length // players))
-    train.drop(columns=drop_cols, inplace=True)
-    valid.drop(columns=drop_cols, inplace=True)
-    test.drop(columns=drop_cols, inplace=True)
-
-    print(train.shape)
-    print(valid.shape)
-    print(tr_group.shape)
-    print(val_group.shape)
-
-    for col in train.columns:
-        train[col] = train[col].astype(int)
-
-    for col in valid.columns:
-        valid[col] = valid[col].astype(int)
-    cat_feature_idx = [idx for idx, col in enumerate(train.columns)
-                       if col in ["registration_number", "mortar", "board"]]
-
-    lgb_train = lgb.Dataset(train, tr_target,
-                            categorical_feature=cat_feature_idx,
-                            group=tr_group)
-    lgb_valid = lgb.Dataset(valid, val_target,
-                            categorical_feature=cat_feature_idx,
-                            group=val_group)
-
-    lgb_clf = lgb.train(
-        lgbm_params,
-        lgb_train,
-        categorical_feature=cat_feature_idx,
-        num_boost_round=2000,
-        valid_sets=[lgb_train, lgb_valid],
-        valid_names=['train', 'valid'],
-        early_stopping_rounds=200,
-        verbose_eval=1
-    )
-
-    lgb_clf.save_model("resources/model_1.txt",
-                       num_iteration=lgb_clf.best_iteration)
-
-    extraction_cb = ModelExtractionCallback()
-    callbacks = [
-        extraction_cb,
-    ]
-
-    lgb_model_cv = lgb.cv(
-        lgbm_params,
-        lgb_train,
-        categorical_feature=cat_feature_idx,
-        num_boost_round=5000,
-        # valid_sets=[lgb_train, lgb_valid],
-        # valid_names=['train','valid'],
-        early_stopping_rounds=400,
-        verbose_eval=1,
-        nfold=5,
-        shuffle=True,
-        seed=42,
-        callbacks=callbacks
-    )
-
-    # Retrieving booster and training information.
-    proxy = extraction_cb.boosters_proxy
-    boosters = extraction_cb.raw_boosters
-    best_iteration = extraction_cb.best_iteration
-
-    for i, booster in enumerate(boosters):
-        booster.save_model("resources/model_1_cv_{}.txt".format(i),
-                           num_iteration=best_iteration)
+    for code in config.get_field_code().values():
+        lgb_cv(new_df, code, rank2win_points, lgbm_params, players)
 
 
 if __name__ == '__main__':

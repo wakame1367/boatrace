@@ -76,7 +76,7 @@ def main():
                                key=lambda x: numerical_sort(x.stem))
     # unlzh(root_path)
     data = []
-    stop = "141231"
+    stop = "181231"
     for race_info_path, race_result_path in zip(race_info_paths,
                                                 race_result_paths):
         st = StartTable(path=race_info_path).preprocess()
@@ -111,15 +111,16 @@ def main():
     all_data = new_df[new_df["field_name"] == 1]
     all_data["rank"] = all_data["rank"].map(rank2win_points)
     train_query = (("2013-01-01" <= all_data["date"]) & (
-            all_data["date"] <= "2013-12-31"))
-    val_query = (("2014-01-01" <= all_data["date"]) & (
-            all_data["date"] <= "2014-8-31"))
-    test_query = (("2014-08-31" <= all_data["date"]) & (
-            all_data["date"] <= "2014-10-31"))
+            all_data["date"] <= "2017-12-31"))
+    val_query = (("2018-01-01" <= all_data["date"]) & (
+            all_data["date"] <= "2018-8-31"))
+    test_query = (("2018-08-31" <= all_data["date"]) & (
+            all_data["date"] <= "2018-10-31"))
 
     train = all_data[train_query]
     valid = all_data[val_query]
     test = all_data[test_query]
+    valid.to_csv("resources/valid.csv", index=False)
     test.to_csv("resources/test.csv", index=False)
     tr_length, val_length, test_length = train.shape[0], valid.shape[0], \
                                          test.shape[0]
@@ -129,9 +130,17 @@ def main():
     te_target = test["rank"]
     drop_cols = ["date", "field_name", "race_idx", "rank"]
 
+    tr_group = np.array([players] * (tr_length // players))
+    val_group = np.array([players] * (val_length // players))
     train.drop(columns=drop_cols, inplace=True)
     valid.drop(columns=drop_cols, inplace=True)
     test.drop(columns=drop_cols, inplace=True)
+
+    print(train.shape)
+    print(valid.shape)
+    print(tr_group.shape)
+    print(val_group.shape)
+
     for col in train.columns:
         train[col] = train[col].astype(int)
 
@@ -142,10 +151,10 @@ def main():
 
     lgb_train = lgb.Dataset(train, tr_target,
                             categorical_feature=cat_feature_idx,
-                            group=np.array([players] * (tr_length // players)))
+                            group=tr_group)
     lgb_valid = lgb.Dataset(valid, val_target,
                             categorical_feature=cat_feature_idx,
-                            group=np.array([players] * (val_length // players)))
+                            group=val_group)
 
     lgb_clf = lgb.train(
         lgbm_params,

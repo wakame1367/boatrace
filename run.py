@@ -107,9 +107,9 @@ def main():
         'min_data': 1,
         'min_data_in_bin': 1,
     }
-
+    rank2win_points = {1: 10, 2: 8, 3: 6, 4: 4, 5: 2, 6: 1}
     all_data = new_df[new_df["field_name"] == 1]
-
+    all_data["rank"] = all_data["rank"].map(rank2win_points)
     train_query = (("2013-01-01" <= all_data["date"]) & (
             all_data["date"] <= "2013-12-31"))
     val_query = (("2014-01-01" <= all_data["date"]) & (
@@ -120,6 +120,7 @@ def main():
     train = all_data[train_query]
     valid = all_data[val_query]
     test = all_data[test_query]
+    test.to_csv("resources/test.csv", index=False)
     tr_length, val_length, test_length = train.shape[0], valid.shape[0], \
                                          test.shape[0]
     print(tr_length, val_length, test_length)

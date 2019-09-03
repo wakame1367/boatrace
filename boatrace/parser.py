@@ -251,10 +251,12 @@ class StartTable:
 
 class RaceResult:
     def __init__(self, path):
-        self.__parse(path)
+        self.sep_size = 79
+        self.separator = "-" * self.sep_size
         self.field_name2code = field_name2code
         self.header = ["date", "field_name", "race_idx", "rank",
                        "registration_number"]
+        self.__parse(path)
 
     def __parse(self, path, encoding="cp932"):
         date = path.stem[1:]
@@ -262,40 +264,52 @@ class RaceResult:
         raw_lines = []
         begin_idx = []
         end_idx = []
-        race_header_length = 27
-        result_header_length = 3
-        interval_per_race_length = 12
-        interval_per_day_length = 12
+        sep_idx = []
         players = 6
+        in_race_flg = False
         with path.open("r", encoding=encoding) as lines:
             for line_no, line in enumerate(lines):
                 raw_line = line.strip()
                 raw_lines.append(raw_line)
                 if "KBGN" in raw_line:
                     begin_idx.append(line_no)
+                    in_race_flg = True
                 if "KEND" in raw_line:
                     end_idx.append(line_no)
-        for b_idx, e_idx in zip(begin_idx, end_idx):
+                    in_race_flg = False
+                if self.separator == raw_line and in_race_flg:
+                    sep_idx.append(line_no)
+        # group_idx - (b_idx, e_idx) -> one field race (12R)
+        # race_idx - all race (12R) per race
+        key2indexes = {}
+        for group_idx, (b_idx, e_idx) in enumerate(zip(begin_idx, end_idx)):
+            indexes = []
             # skip race because not data
             if e_idx - b_idx < 10:
                 continue
-            # skip headers
-            race_info = raw_lines[b_idx + 1].strip() \
-                .replace("\u3000", "").replace("［成績］", "").split()
-            field_name = race_info[0]
-            one_day_lines = raw_lines[b_idx + race_header_length:e_idx]
-            end_race_idx = 0
-            for race_idx in range(interval_per_day_length):
-                if race_idx == 0:
-                    begin_race_idx = race_idx * players + result_header_length
-                else:
-                    begin_race_idx = end_race_idx + result_header_length + \
-                                     interval_per_race_length
-                end_race_idx = begin_race_idx + players
-                for rank, line in enumerate(
-                        one_day_lines[begin_race_idx:end_race_idx], 1):
-                    tables.append([date, field_name, race_idx + 1, rank]
-                                  + self.__preprocess_line(line))
+            for s_idx in sep_idx:
+                if b_idx < s_idx < e_idx:
+                    indexes.append(s_idx)
+            key2indexes[(b_idx, e_idx)] = indexes
+
+        for (b_idx, e_idx), separator_indexes in key2indexes.items():
+            # separator_indexes is empty = canceled race
+            if separator_indexes:
+                field_code = raw_lines[b_idx].strip().replace("KBGN", "")
+                field_name = None
+                for field_name, code in self.field_name2code.items():
+                    if code == int(field_code):
+                        break
+                if field_name is None:
+                    raise ValueError
+
+                for race_idx, sep in enumerate(separator_indexes):
+                    begin_race_idx = sep
+                    end_race_idx = begin_race_idx + players + 1
+                    for rank, line in enumerate(
+                            raw_lines[begin_race_idx + 1:end_race_idx], 1):
+                        tables.append([date, field_name, race_idx + 1, rank]
+                                      + self.__preprocess_line(line))
         self.start_table = tables
 
     def __preprocess_line(self, line):

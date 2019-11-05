@@ -264,7 +264,7 @@ def main():
     print(new_df.columns)
 
     seed = 20190801
-    max_position = 4
+    max_position = 3
     players = 6
     lgbm_params = {
         'task': 'train',
